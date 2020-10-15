@@ -19,4 +19,6 @@
     <string name="sure_text">Are you sure?</string>
     <string name="no_text">NO</string>
     <string name="yes_text">YES</string>
+    <string name="edit_title">Edit Item</string>
+    <string name="update_text">UPDATE</string>
 </resources>

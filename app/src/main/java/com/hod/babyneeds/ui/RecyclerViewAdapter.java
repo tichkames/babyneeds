@@ -2,15 +2,21 @@ package com.hod.babyneeds.ui;
 
 import android.app.AlertDialog;
 import android.content.Context;
+import android.content.Intent;
+import android.os.Handler;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
+import android.widget.EditText;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.google.android.material.snackbar.Snackbar;
+import com.hod.babyneeds.ListActivity;
+import com.hod.babyneeds.MainActivity;
 import com.hod.babyneeds.R;
 import com.hod.babyneeds.data.DatabaseHandler;
 import com.hod.babyneeds.model.Item;
@@ -91,13 +97,68 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerViewAdapte
             switch (v.getId()) {
                 case R.id.btn_edit :
                     //edit item
+                    editItem(items.get(getAdapterPosition()));
                     break;
                 case R.id.btn_delete :
                     //delete item
-                    Item item = items.get(getAdapterPosition());
-                    deleteItem(item.getId());
+                    deleteItem(items.get(getAdapterPosition()).getId());
                     break;
             }
+        }
+
+        private void editItem(final Item editItem) {
+            builder = new AlertDialog.Builder(context);
+            inflater = LayoutInflater.from(context);
+            View view = inflater.inflate(R.layout.popup, null);
+
+            final EditText etItem = view.findViewById(R.id.et_item);
+            final EditText etQuantity = view.findViewById(R.id.et_item_qty);
+            final EditText etColor = view.findViewById(R.id.et_item_color);
+            final EditText etSize = view.findViewById(R.id.et_item_size);
+            Button saveButton = view.findViewById(R.id.btn_save);
+            TextView tvTitle = view.findViewById(R.id.tv_title);
+
+            tvTitle.setText(R.string.edit_title);
+            saveButton.setText(R.string.update_text);
+
+            //Populate popup with current object data!
+            etItem.setText(editItem.getItemName());
+            etQuantity.setText(String.valueOf(editItem.getItemQuantity()));
+            etColor.setText(editItem.getItemColor());
+            etSize.setText(String.valueOf(editItem.getItemSize()));
+
+            saveButton.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+
+                    if(!etItem.getText().toString().isEmpty() && !String.valueOf(etQuantity.getText()).isEmpty() &&
+                            !etColor.getText().toString().isEmpty() && !String.valueOf(etSize.getText()).isEmpty()) {
+
+                        editItem.setItemName(etItem.getText().toString());
+                        editItem.setItemQuantity(Integer.valueOf(etQuantity.getText().toString()));
+                        editItem.setItemColor(etColor.getText().toString());
+                        editItem.setItemSize(Integer.valueOf(etSize.getText().toString()));
+
+                        new DatabaseHandler(context).updateItem(editItem);
+                        notifyItemChanged(getAdapterPosition(), editItem);
+
+                    } else {
+                        Snackbar.make(v, "Empty fields not allowed!", Snackbar.LENGTH_SHORT)
+                                .show();
+                    }
+
+                    new Handler().postDelayed(new Runnable() {
+                        @Override
+                        public void run() {
+                            dialog.dismiss();
+                        }
+                    }, 1200);
+                }
+            });
+
+            builder.setView(view);
+            dialog = builder.create();
+            dialog.show();
         }
 
         private void deleteItem(final int id) {
